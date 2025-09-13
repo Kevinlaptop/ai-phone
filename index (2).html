@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KevinAGI - AI Assistant</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-html.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-sql.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+    
+    <!-- Mermaid for diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+    
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    
+    <style>
+        :root {
+            --background: #ffffff;
+            --text: #1f1f1f;
+            --border: #e1e1e1;
+            --input-bg: #f8f9fa;
+            --hover: #f1f3f4;
+            --primary: #1a73e8;
+            --primary-hover: #1557b0;
+            --danger: #d93025;
+            --danger-hover: #b52d20;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --user-bg: #e3f2fd;
+            --assistant-bg: #f8f9fa;
+            --code-bg: #f5f5f5;
+            --secondary-text: #5f6368;
+        }
+
+        [data-theme="dark"] {
+            --background: #121212;
+            --text: #e8eaed;
+            --border: #3c4043;
+            --input-bg: #202124;
+            --hover: #2d2e30;
+            --shadow: 0 1px 3px rgba(0,0,0,0.3);
+            --user-bg: #1e3a8a;
+            --assistant-bg: #202124;
+            --code-bg: #2d2e30;
+            --secondary-text: #9aa0a6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: var(--background);
+            color: var(--text);
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Landing Page Styles */
+        .landing-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .floating-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            background: white;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape:nth-child(2) {
+            width: 120px;
+            height: 120px;
+            background: #06b6d4;
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+
+        .shape:nth-child(3) {
+            width: 60px;
+            height: 60px;
+            background: #f43f5e;
+            top: 40%;
+            left: 80%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .lang-switch {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lang-switch:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* Landing page clear history button */
+        .landing-page .icon-btn {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .landing-page .icon-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .hero-content {
+            text-align: center;
+            margin-top: 80px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-icon {
+            width: 120px;
+            height: 120px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            animation: pulse 2s ease-in-out infinite;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .hero-title {
+            font-size: 36px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 16px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(45deg, #ffffff, #f0f9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 40px;
+            line-height: 1.6;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .cta-button {
+            background: rgba(255,255,255,0.9);
+            color: #6366f1;
+            border: none;
+            border-radius: 50px;
+            padding: 16px 32px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            background: white;
+        }
+
+        .cta-button:active {
+            transform: translateY(-1px);
+        }
+
+        .desktop-notice {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 40px;
+            color: rgba(255,255,255,0.9);
+            text-align: center;
+            font-size: 14px;
+            line-height: 1.5;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .desktop-notice a {
+            color: #60a5fa;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .desktop-notice a:hover {
+            text-decoration: underline;
+        }
+
+        /* Chat Interface Styles - Original Claude Style */
+        .chat-interface {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            flex-direction: column;
+            display: none;
+            z-index: 2;
+        }
+
+        .chat-interface.active {
+            display: flex;
+        }
+
+        /* 顶部栏 */
+        .chat-header {
+            background: var(--background);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .chat-logo {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .model-selector {
+            position: relative;
+        }
+
+        .model-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .model-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            min-width: 180px;
+            display: none;
+        }
+
+        .model-dropdown.show {
+            display: block;
+        }
+
+        .model-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        .model-option:last-child {
+            border-bottom: none;
+        }
+
+        .model-option:hover {
+            background: var(--hover);
+        }
+
+        .model-option.selected {
+            background: var(--primary);
+            color: white;
+        }
+
+        .icon-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .icon-btn:hover {
+            background: var(--hover);
+        }
+
+        /* 聊天区域 */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 18px 16px;
+        }
+
+        .welcome {
+            text-align: center;
+            margin-top: 25%;
+            padding: 0 20px;
+        }
+
+        .welcome h2 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .welcome p {
+            color: var(--secondary-text);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message {
+            margin-bottom: 20px;
+        }
+
+        .message:last-child {
+            margin-bottom: 12px;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .user .avatar {
+            background: var(--primary);
+            color: white;
+        }
+
+        .assistant .avatar {
+            background: var(--secondary-text);
+            color: white;
+        }
+
+        .author {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--secondary-text);
+        }
+
+        .content {
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* 优化文本段落间距 */
+        .content p {
+            margin: 10px 0;
+        }
+
+        .content p:first-child {
+            margin-top: 0;
+        }
+
+        .content p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 优化列表样式 */
+        .content ul, .content ol {
+            margin: 12px 0;
+            padding-left: 22px;
+        }
+
+        .content li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        /* 优化标题样式 */
+        .content h1, .content h2, .content h3, .content h4, .content h5, .content h6 {
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .content h1:first-child, .content h2:first-child, 
+        .content h3:first-child, .content h4:first-child,
+        .content h5:first-child, .content h6:first-child {
+            margin-top: 0;
+        }
+
+        .user .content {
+            background: var(--user-bg);
+            margin-left: 28px;
+        }
+
+        .assistant .content {
+            background: var(--assistant-bg);
+            border-left: 3px solid var(--primary);
+            margin-left: 28px;
+            padding-left: 16px;
+        }
+
+        /* 附件显示 */
+        .attachment {
+            background: var(--hover);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px;
+            margin: 4px 0;
+            font-size: 12px;
+        }
+
+        .attachment-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .attachment-content {
+            background: var(--code-bg);
+            padding: 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 11px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        /* 代码块 */
+        .content pre {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin: 14px 0;
+            overflow-x: auto;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--hover);
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            border-top-left-radius: 7px;
+            border-top-right-radius: 7px;
+        }
+
+        .code-lang {
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .copy-btn {
+            background: var(--primary);
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .content code {
+            font-family: 'SFMono-Regular', 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
+            padding: 12px;
+            display: block;
+            line-height: 1.5;
+        }
+
+        .content p code {
+            background: var(--hover);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline;
+            font-size: 12px;
+            border: 1px solid var(--border);
+        }
+
+        /* 引用块样式 */
+        .content blockquote {
+            border-left: 4px solid var(--primary);
+            margin: 12px 0;
+            padding: 8px 12px;
+            background: var(--hover);
+            border-radius: 0 6px 6px 0;
+            font-style: italic;
+        }
+
+        .content blockquote p {
+            margin: 4px 0;
+        }
+
+        /* 表格样式 */
+        .content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+            font-size: 12px;
+        }
+
+        .content th, .content td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: left;
+        }
+
+        .content th {
+            background: var(--hover);
+            font-weight: 600;
+        }
+
+        .content tr:nth-child(even) {
+            background: rgba(0,0,0,0.02);
+        }
+
+        [data-theme="dark"] .content tr:nth-child(even) {
+            background: rgba(255,255,255,0.02);
+        }
+
+        /* Mermaid diagrams */
+        .mermaid-container {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin: 8px 0;
+            padding: 16px;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            max-width: 100%;
+        }
+
+        /* Math formulas */
+        .katex-display {
+            margin: 8px 0;
+            overflow-x: auto;
+        }
+
+        .katex {
+            font-size: 1em;
+        }
+
+        /* 输入区域 */
+        .input-area {
+            border-top: 1px solid var(--border);
+            padding: 12px 16px;
+            flex-shrink: 0;
+        }
+
+        .input-container {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+        }
+
+        .input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 36px;
+            max-height: 100px;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: var(--input-bg);
+            color: var(--text);
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .message-input:focus {
+            border-color: var(--primary);
+        }
+
+        .attach-btn {
+            position: absolute;
+            left: 8px;
+            bottom: 8px;
+            width: 20px;
+            height: 20px;
+            background: none;
+            border: none;
+            color: var(--secondary-text);
+            cursor: pointer;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .attach-btn:hover {
+            background: var(--hover);
+            color: var(--primary);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .send-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .send-btn.stop {
+            background: var(--danger);
+        }
+
+        .send-btn.stop:hover {
+            background: var(--danger-hover);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 附件列表 */
+        .attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .attachment-item {
+            background: var(--hover);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .remove-attachment {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 12px;
+            padding: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        /* 流式输出 */
+        .cursor-blink {
+            display: inline-block;
+            background: var(--primary);
+            width: 2px;
+            height: 1.2em;
+            animation: blink 1s infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        /* 通知 */
+        .notification {
+            position: fixed;
+            top: 60px;
+            right: 16px;
+            background: var(--primary);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 2000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .hero-title {
+                font-size: 28px;
+            }
+            
+            .hero-subtitle {
+                font-size: 16px;
+            }
+
+            .chat-header {
+                padding: 8px 12px;
+            }
+            
+            .chat-area {
+                padding: 14px 12px;
+            }
+            
+            .input-area {
+                padding: 10px 12px;
+            }
+            
+            .message-input {
+                padding-left: 32px;
+                font-size: 14px;
+            }
+
+            .content {
+                font-size: 14px;
+                padding: 12px;
+            }
+
+            .content code {
+                font-size: 11px;
+                padding: 10px;
+            }
+
+            .message {
+                margin-bottom: 18px;
+            }
+
+            .avatar {
+                width: 22px;
+                height: 22px;
+                font-size: 11px;
+            }
+        }
+
+        /* 更小屏幕优化 */
+        @media (max-width: 360px) {
+            .hero-icon {
+                width: 100px;
+                height: 100px;
+                font-size: 40px;
+            }
+
+            .hero-title {
+                font-size: 24px;
+            }
+
+            .chat-area {
+                padding: 12px 10px;
+            }
+
+            .content {
+                padding: 10px;
+                font-size: 13px;
+            }
+        }
+
+        /* Dark theme adjustments */
+        [data-theme="dark"] .landing-page {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+        }
+
+        [data-theme="dark"] .code-header {
+            background: var(--hover);
+            border-bottom-color: var(--border);
+        }
+
+        [data-theme="dark"] .copy-btn {
+            background: var(--primary);
+            color: white;
+        }
+
+        [data-theme="dark"] .copy-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        [data-theme="dark"] .content blockquote {
+            background: var(--hover);
+            border-left-color: var(--primary);
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- Landing Page -->
+    <div class="landing-page" id="landingPage">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+        
+        <div class="container">
+            <div class="header">
+                <div class="logo">KevinAGI</div>
+                <div class="header-controls">
+                    <button class="icon-btn" onclick="clearHistory()" id="clearHistoryBtn">🗑️</button>
+                    <button class="lang-switch" onclick="toggleLanguage()" id="langSwitch">EN</button>
+                    <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">🌙</button>
+                </div>
+            </div>
+            
+            <div class="hero-content">
+                <div class="hero-icon">🤖</div>
+                <h1 class="hero-title" id="heroTitle">KevinAGI</h1>
+                <p class="hero-subtitle" id="heroSubtitle">您的智能AI助手，随时为您提供帮助</p>
+                <button class="cta-button" onclick="startChat()" id="ctaButton">开始对话</button>
+                
+                <div class="desktop-notice" id="desktopNotice">
+                    <p>💻 如果您是电脑用户，请移步 <a href="https://kevinclaude.netlify.app" target="_blank">kevinclaude.netlify.app</a> 获得更好的体验</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Interface -->
+    <div class="chat-interface" id="chatInterface">
+        <div class="chat-header">
+            <div></div>
+            <div class="header-right">
+                <div class="model-selector">
+                    <button class="model-btn" onclick="toggleModelDropdown()">
+                        <span id="currentModel">Qwen2.5-32B</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="model-dropdown" id="modelDropdown">
+                        <div class="model-option selected" data-model="Qwen/Qwen2.5-32B-Instruct" onclick="selectModel(this)">Qwen2.5-32B</div>
+                        <div class="model-option" data-model="deepseek-ai/DeepSeek-V2.5" onclick="selectModel(this)">DeepSeek-V2.5</div>
+                        <div class="model-option" data-model="Qwen/Qwen2.5-72B-Instruct" onclick="selectModel(this)">Qwen2.5-72B</div>
+                        <div class="model-option" data-model="Qwen/Qwen2.5-Coder-32B-Instruct" onclick="selectModel(this)">Qwen2.5-Coder-32B</div>
+                    </div>
+                </div>
+                <button class="icon-btn" onclick="toggleTheme()" id="chatThemeBtn">🌙</button>
+                <button class="icon-btn" onclick="newChat()" id="newChatBtn">新建</button>
+                <button class="icon-btn" onclick="backToLanding()" id="backBtn">返回</button>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <div class="welcome" id="chatWelcome">
+                <h2 id="welcomeTitle">KevinAGI 助手</h2>
+                <p id="welcomeDesc">我是您的AI助手，可以帮助您解决各种问题</p>
+            </div>
+            <div id="messages"></div>
+        </div>
+
+        <div class="input-area">
+            <div class="attachments" id="attachments"></div>
+            <div class="input-container">
+                <div class="input-wrapper">
+                    <button class="attach-btn" onclick="document.getElementById('fileInput').click()">📎</button>
+                    <textarea 
+                        id="messageInput" 
+                        class="message-input" 
+                        placeholder="向KevinAGI发送消息..."
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="adjustTextarea(this)"
+                    ></textarea>
+                    <input type="file" id="fileInput" class="file-input" accept=".txt,.js,.py,.html,.css,.json,.md,.xml,.sql,.sh,.java,.cpp,.c,.mmd,.mermaid" onchange="handleFileSelect(event)" multiple>
+                </div>
+                <button class="send-btn" id="sendBtn" onclick="handleSendClick()">
+                    <span id="sendIcon">➤</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            API_BASE_URL: 'https://api.siliconflow.cn/v1/chat/completions',
+            API_KEY: 'sk-oiztqkviytgbsjngiamsaxgkuvzzclfvfikqrdwcnsdonhmg',
+            MODELS: {
+                'Qwen/Qwen2.5-32B-Instruct': 'Sonnet 3.5',
+                'deepseek-ai/DeepSeek-V2.5': 'Opus 3.5',
+                'Qwen/Qwen2.5-72B-Instruct': 'Sonnet 3.7',
+                'Qwen/Qwen2.5-Coder-32B-Instruct': 'Sonnet 4.1'
+            }
+        };
+
+        // Language support
+        const TRANSLATIONS = {
+            zh: {
+                heroTitle: 'KevinAGI',
+                heroSubtitle: '您的智能AI助手，随时为您提供帮助',
+                ctaButton: '开始对话',
+                desktopNotice: '💻 如果您是电脑用户，请移步 <a href="https://kevinclaude.netlify.app" target="_blank">kevinclaude.netlify.app</a> 获得更好的体验',
+                welcomeTitle: 'KevinAGI 助手',
+                welcomeDesc: '我是您的AI助手，可以帮助您解决各种问题',
+                inputPlaceholder: '向KevinAGI发送消息...',
+                newChatBtn: '新建',
+                clearHistoryBtn: '清除',
+                clearHistoryTooltip: '清除历史记录',
+                backBtn: '返回'
+            },
+            en: {
+                heroTitle: 'KevinAGI',
+                heroSubtitle: 'Your intelligent AI assistant, ready to help you anytime',
+                ctaButton: 'Get Started',
+                desktopNotice: '💻 If you are a desktop user, please visit <a href="https://kevinclaude.netlify.app" target="_blank">kevinclaude.netlify.app</a> for a better experience',
+                welcomeTitle: 'KevinAGI Assistant',
+                welcomeDesc: 'I am your AI assistant, ready to help you solve various problems',
+                inputPlaceholder: 'Send a message to KevinAGI...',
+                newChatBtn: 'New',
+                clearHistoryBtn: 'Clear',
+                clearHistoryTooltip: 'Clear history',
+                backBtn: 'Back'
+            }
+        };
+
+        // Global variables
+        let currentLanguage = 'zh';
+        let currentModel = 'Qwen/Qwen2.5-32B-Instruct';
+        let messages = [];
+        let currentTheme = 'light';
+        let attachments = [];
+        let isStreaming = false;
+        let currentController = null;
+
+        // History management
+        function saveHistory() {
+            try {
+                const historyData = {
+                    messages: messages,
+                    language: currentLanguage,
+                    model: currentModel,
+                    theme: currentTheme,
+                    timestamp: new Date().toISOString()
+                };
+                localStorage.setItem('kevinagi_chat_history', JSON.stringify(historyData));
+            } catch (error) {
+                console.error('Failed to save history:', error);
+            }
+        }
+
+        function loadHistory() {
+            try {
+                const historyData = localStorage.getItem('kevinagi_chat_history');
+                if (historyData) {
+                    const data = JSON.parse(historyData);
+                    
+                    // Restore language
+                    if (data.language) {
+                        currentLanguage = data.language;
+                    }
+                    
+                    // Restore theme
+                    if (data.theme) {
+                        currentTheme = data.theme;
+                        document.body.setAttribute('data-theme', currentTheme);
+                        const themeIcon = currentTheme === 'light' ? '🌙' : '☀️';
+                        const themeToggleBtn = document.getElementById('themeToggle');
+                        const chatThemeBtn = document.getElementById('chatThemeBtn');
+                        if (themeToggleBtn) themeToggleBtn.textContent = themeIcon;
+                        if (chatThemeBtn) chatThemeBtn.textContent = themeIcon;
+                    }
+                    
+                    // Restore model
+                    if (data.model) {
+                        currentModel = data.model;
+                        const modelOption = document.querySelector(`[data-model="${data.model}"]`);
+                        if (modelOption) {
+                            const currentModelBtn = document.getElementById('currentModel');
+                            if (currentModelBtn) {
+                                currentModelBtn.textContent = modelOption.textContent;
+                            }
+                            document.querySelectorAll('.model-option').forEach(opt => opt.classList.remove('selected'));
+                            modelOption.classList.add('selected');
+                        }
+                    }
+                    
+                    // Restore messages
+                    if (data.messages && data.messages.length > 0) {
+                        messages = data.messages;
+                        restoreMessages();
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load history:', error);
+            }
+        }
+
+        function restoreMessages() {
+            const messagesContainer = document.getElementById('messages');
+            messagesContainer.innerHTML = '';
+            
+            messages.forEach((msg, index) => {
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${msg.role}`;
+                messageElement.id = `message-${index}`;
+                
+                const avatar = msg.role === 'user' ? '👤' : '🤖';
+                const author = msg.role === 'user' ? (currentLanguage === 'zh' ? '您' : 'You') : 'KevinAGI';
+                
+                messageElement.innerHTML = `
+                    <div class="message-header">
+                        <div class="avatar">${avatar}</div>
+                        <div class="author">${author}</div>
+                    </div>
+                    <div class="content" id="content-${index}">
+                        ${msg.attachments && msg.attachments.length > 0 ? renderAttachments(msg.attachments) : ''}
+                        ${msg.content}
+                    </div>
+                `;
+                
+                messagesContainer.appendChild(messageElement);
+                
+                // Process the content for code blocks and math
+                const contentElement = document.getElementById(`content-${index}`);
+                if (contentElement && msg.content) {
+                    contentElement.innerHTML = marked.parse(msg.content);
+                    renderCodeBlocks(contentElement);
+                    renderMath(contentElement);
+                }
+            });
+            
+            if (messages.length > 0) {
+                // Hide welcome message
+                const welcome = document.getElementById('chatWelcome');
+                if (welcome) welcome.style.display = 'none';
+                
+                // Scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        }
+
+        function clearHistory() {
+            if (confirm(currentLanguage === 'zh' ? '确定要清除所有聊天记录吗？' : 'Are you sure you want to clear all chat history?')) {
+                try {
+                    localStorage.removeItem('kevinagi_chat_history');
+                    newChat();
+                    showNotification(currentLanguage === 'zh' ? '历史记录已清除' : 'History cleared');
+                } catch (error) {
+                    console.error('Failed to clear history:', error);
+                    showNotification(currentLanguage === 'zh' ? '清除失败' : 'Clear failed');
+                }
+            }
+        }
+
+        // Language switching
+        function toggleLanguage() {
+            currentLanguage = currentLanguage === 'zh' ? 'en' : 'zh';
+            updateLanguageUI();
+            saveHistory(); // Save language preference
+        }
+
+        function updateLanguageUI() {
+            const lang = TRANSLATIONS[currentLanguage];
+            
+            // Update landing page
+            document.getElementById('heroTitle').textContent = lang.heroTitle;
+            document.getElementById('heroSubtitle').textContent = lang.heroSubtitle;
+            document.getElementById('ctaButton').textContent = lang.ctaButton;
+            document.getElementById('desktopNotice').innerHTML = `<p>${lang.desktopNotice}</p>`;
+            document.getElementById('clearHistoryBtn').textContent = lang.clearHistoryBtn;
+            document.getElementById('clearHistoryBtn').title = lang.clearHistoryTooltip;
+            
+            // Update chat interface
+            document.getElementById('welcomeTitle').textContent = lang.welcomeTitle;
+            document.getElementById('welcomeDesc').textContent = lang.welcomeDesc;
+            document.getElementById('messageInput').placeholder = lang.inputPlaceholder;
+            document.getElementById('newChatBtn').textContent = lang.newChatBtn;
+            document.getElementById('backBtn').textContent = lang.backBtn;
+            
+            // Update language switch button
+            document.getElementById('langSwitch').textContent = currentLanguage === 'zh' ? 'EN' : '中';
+            
+            // Update document language
+            document.documentElement.lang = currentLanguage === 'zh' ? 'zh-CN' : 'en';
+        }
+
+        // Theme switching
+        function toggleTheme() {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', currentTheme);
+            
+            const themeIcon = currentTheme === 'light' ? '🌙' : '☀️';
+            document.getElementById('themeToggle').textContent = themeIcon;
+            document.getElementById('chatThemeBtn').textContent = themeIcon;
+            
+            saveHistory(); // Save theme preference
+        }
+
+        // Page navigation
+        function startChat() {
+            document.getElementById('landingPage').style.display = 'none';
+            document.getElementById('chatInterface').classList.add('active');
+            
+            // Focus on input
+            setTimeout(() => {
+                document.getElementById('messageInput').focus();
+            }, 100);
+        }
+
+        function backToLanding() {
+            document.getElementById('chatInterface').classList.remove('active');
+            document.getElementById('landingPage').style.display = 'block';
+        }
+
+        // Model selection
+        function toggleModelDropdown() {
+            const dropdown = document.getElementById('modelDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        function selectModel(element) {
+            const model = element.getAttribute('data-model');
+            const modelName = element.textContent;
+            
+            currentModel = model;
+            document.getElementById('currentModel').textContent = modelName;
+            
+            // Update selected state
+            document.querySelectorAll('.model-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            // Close dropdown
+            document.getElementById('modelDropdown').classList.remove('show');
+            
+            saveHistory(); // Save model preference
+        }
+
+        // Chat functionality
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function adjustTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+        }
+
+        function handleSendClick() {
+            if (isStreaming) {
+                stopGeneration();
+            } else {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            if (!content && attachments.length === 0) return;
+            
+            // Add user message
+            addMessage('user', content, attachments);
+            
+            // Clear input and attachments
+            input.value = '';
+            attachments = [];
+            updateAttachments();
+            adjustTextarea(input);
+            
+            // Send to API
+            sendToAPI(content);
+        }
+
+        async function sendToAPI(userMessage) {
+            const messagesForAPI = messages.map(msg => ({
+                role: msg.role === 'user' ? 'user' : 'assistant',
+                content: msg.content
+            }));
+
+            isStreaming = true;
+            updateSendButton();
+            
+            // Add assistant message placeholder
+            const assistantMessageId = addMessage('assistant', '', []);
+            
+            try {
+                currentController = new AbortController();
+                
+                const response = await fetch(CONFIG.API_BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: currentModel,
+                        messages: messagesForAPI,
+                        stream: true,
+                        max_tokens: 4000,
+                        temperature: 0.7
+                    }),
+                    signal: currentController.signal
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let assistantContent = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') continue;
+
+                            try {
+                                const parsed = JSON.parse(data);
+                                const delta = parsed.choices?.[0]?.delta?.content;
+                                if (delta) {
+                                    assistantContent += delta;
+                                    updateMessageContent(assistantMessageId, assistantContent + '<span class="cursor-blink"></span>');
+                                }
+                            } catch (e) {
+                                // Ignore parsing errors
+                            }
+                        }
+                    }
+                }
+
+                // Remove cursor and finalize message
+                updateMessageContent(assistantMessageId, assistantContent);
+                messages[assistantMessageId].content = assistantContent;
+                saveHistory(); // Save conversation history
+
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('API Error:', error);
+                    const errorMsg = currentLanguage === 'zh' ? '抱歉，发生了错误，请稍后重试。' : 'Sorry, an error occurred. Please try again later.';
+                    updateMessageContent(assistantMessageId, errorMsg);
+                    messages[assistantMessageId].content = errorMsg;
+                    saveHistory(); // Save error message to history
+                }
+            } finally {
+                isStreaming = false;
+                updateSendButton();
+                currentController = null;
+            }
+        }
+
+        function stopGeneration() {
+            if (currentController) {
+                currentController.abort();
+                currentController = null;
+            }
+            isStreaming = false;
+            updateSendButton();
+        }
+
+        function addMessage(role, content, attachments = []) {
+            const messageId = messages.length;
+            messages.push({ role, content, attachments });
+            
+            const messagesContainer = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${role}`;
+            messageElement.id = `message-${messageId}`;
+            
+            const avatar = role === 'user' ? '👤' : '🤖';
+            const author = role === 'user' ? (currentLanguage === 'zh' ? '您' : 'You') : 'KevinAGI';
+            
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <div class="avatar">${avatar}</div>
+                    <div class="author">${author}</div>
+                </div>
+                <div class="content" id="content-${messageId}">
+                    ${attachments.length > 0 ? renderAttachments(attachments) : ''}
+                    ${content}
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageElement);
+            
+            // Hide welcome message
+            const welcome = document.getElementById('chatWelcome');
+            if (welcome) welcome.style.display = 'none';
+            
+            // Scroll to bottom
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Save user messages immediately (assistant messages saved after completion)
+            if (role === 'user') {
+                saveHistory();
+            }
+            
+            return messageId;
+        }
+
+        function updateMessageContent(messageId, content) {
+            const contentElement = document.getElementById(`content-${messageId}`);
+            if (contentElement) {
+                contentElement.innerHTML = marked.parse(content);
+                renderCodeBlocks(contentElement);
+                renderMath(contentElement);
+            }
+        }
+
+        function renderAttachments(attachments) {
+            return attachments.map(att => `
+                <div class="attachment">
+                    <div class="attachment-name">${att.name}</div>
+                    <div class="attachment-content">${att.content.substring(0, 200)}${att.content.length > 200 ? '...' : ''}</div>
+                </div>
+            `).join('');
+        }
+
+        function updateSendButton() {
+            const sendBtn = document.getElementById('sendBtn');
+            const sendIcon = document.getElementById('sendIcon');
+            
+            if (isStreaming) {
+                sendBtn.classList.add('stop');
+                sendIcon.textContent = '⏹';
+            } else {
+                sendBtn.classList.remove('stop');
+                sendIcon.textContent = '➤';
+            }
+        }
+
+        function newChat() {
+            messages = [];
+            document.getElementById('messages').innerHTML = '';
+            document.getElementById('chatWelcome').style.display = 'block';
+            document.getElementById('messageInput').value = '';
+            attachments = [];
+            updateAttachments();
+            // Note: This clears current conversation but preserves localStorage history
+        }
+
+        // File handling
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+            
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    attachments.push({
+                        name: file.name,
+                        content: e.target.result,
+                        type: file.type
+                    });
+                    updateAttachments();
+                };
+                reader.readAsText(file);
+            });
+            
+            // Clear file input
+            event.target.value = '';
+        }
+
+        function updateAttachments() {
+            const container = document.getElementById('attachments');
+            container.innerHTML = attachments.map((att, index) => `
+                <div class="attachment-item">
+                    <span>${att.name}</span>
+                    <button class="remove-attachment" onclick="removeAttachment(${index})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function removeAttachment(index) {
+            attachments.splice(index, 1);
+            updateAttachments();
+        }
+
+        // Code rendering
+        // Store original code for copying
+        let codeStorage = new Map();
+
+        function renderCodeBlocks(element) {
+            const codeBlocks = element.querySelectorAll('pre code');
+            codeBlocks.forEach(block => {
+                const language = block.className.replace('language-', '') || 'text';
+                const originalCode = block.textContent;
+                const codeId = 'code_' + Math.random().toString(36).substr(2, 9);
+                
+                // Store original code
+                codeStorage.set(codeId, originalCode);
+                
+                // Create header
+                const header = document.createElement('div');
+                header.className = 'code-header';
+                header.innerHTML = `
+                    <span class="code-lang">${language}</span>
+                    <button class="copy-btn" onclick="copyCode('${codeId}')">复制</button>
+                `;
+                
+                // Insert header before code block
+                block.parentElement.insertBefore(header, block);
+                
+                // Highlight syntax
+                if (window.Prism && Prism.languages[language]) {
+                    block.innerHTML = Prism.highlight(originalCode, Prism.languages[language], language);
+                }
+            });
+        }
+
+        function copyCode(codeId) {
+            const codeText = codeStorage.get(codeId);
+            if (!codeText) return;
+            
+            // Try modern clipboard API first
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(codeText).then(() => {
+                    showNotification(currentLanguage === 'zh' ? '代码已复制' : 'Code copied');
+                }).catch(() => {
+                    // Fallback to older method
+                    fallbackCopyText(codeText);
+                });
+            } else {
+                // Fallback for older browsers
+                fallbackCopyText(codeText);
+            }
+        }
+
+        function fallbackCopyText(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showNotification(currentLanguage === 'zh' ? '代码已复制' : 'Code copied');
+            } catch (err) {
+                showNotification(currentLanguage === 'zh' ? '复制失败' : 'Copy failed');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        // Math rendering
+        function renderMath(element) {
+            if (window.renderMathInElement) {
+                renderMathInElement(element, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+            }
+        }
+
+        // Notifications
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Initialize marked
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (window.Prism && Prism.languages[lang]) {
+                    return Prism.highlight(code, Prism.languages[lang], lang);
+                }
+                return code;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        // Initialize mermaid
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#1a73e8',
+                primaryTextColor: '#1f1f1f',
+                primaryBorderColor: '#e1e1e1',
+                lineColor: '#5f6368',
+                secondaryColor: '#f8f9fa',
+                tertiaryColor: '#ffffff'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            securityLevel: 'loose'
+        });
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved history and preferences
+            loadHistory();
+            updateLanguageUI();
+            
+            // Set default model selected state (may be overridden by history)
+            document.querySelector(`[data-model="${currentModel}"]`).classList.add('selected');
+            
+            // Prevent double-tap zoom on mobile
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function (event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.model-selector')) {
+                    document.getElementById('modelDropdown').classList.remove('show');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
